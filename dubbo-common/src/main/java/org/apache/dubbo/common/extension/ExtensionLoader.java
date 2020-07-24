@@ -85,16 +85,23 @@ public class ExtensionLoader<T> {
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
 
+    /**
+     * ExtensionLoader实例缓存，在获取拓展类的时候首先需要先从此缓存中获取到拓展loader对象
+     */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>(64);
 
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>(64);
-
+    /**
+     * 在getExtensionLoader传入的
+     */
     private final Class<?> type;
 
     private final ExtensionFactory objectFactory;
 
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
-
+    /**
+     * 拓展项名称到拓展类的映射关系表缓存（Map<名称, 拓展类>）
+     */
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
@@ -417,16 +424,21 @@ public class ExtensionLoader<T> {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Extension name == null");
         }
+        // 获取默认的拓展实现类
         if ("true".equals(name)) {
             return getDefaultExtension();
         }
+        //Holder，顾名思义，用于持有目标对象
+        //如果holder存在，则包含了目标对象
         final Holder<Object> holder = getOrCreateHolder(name);
         Object instance = holder.get();
         if (instance == null) {
             synchronized (holder) {
                 instance = holder.get();
                 if (instance == null) {
+                    //创建扩展实例
                     instance = createExtension(name, wrap);
+                    //将目标对象放入holder中
                     holder.set(instance);
                 }
             }
@@ -623,20 +635,34 @@ public class ExtensionLoader<T> {
         return new IllegalStateException(buf.toString());
     }
 
+    /**
+     *创建拓展对象
+     *
+     * 1、通过 getExtensionClasses 获取所有的拓展类，加载拓展类的关键
+     * 2、通过反射创建拓展对象
+     * 3、向拓展对象中注入依赖,Dubbo IOC的具体实现
+     * 4、将拓展对象包裹在相应的Wrapper对象中,Dubbo AOP的具体实现
+     *
+     * @param name  拓展对象的class名称
+     * @param wrap  是否要Wrapper
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private T createExtension(String name, boolean wrap) {
+        //从配置文件中加载所有的拓展类，可得到“配置项名称”到“配置类”的映射关系表
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
             throw findException(name);
         }
         try {
+            // 通过反射创建实例
             T instance = (T) EXTENSION_INSTANCES.get(clazz);
             if (instance == null) {
                 EXTENSION_INSTANCES.putIfAbsent(clazz, clazz.newInstance());
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
+            // 向实例中注入依赖
             injectExtension(instance);
-
 
             if (wrap) {
 
@@ -646,18 +672,28 @@ public class ExtensionLoader<T> {
                     wrapperClassesList.sort(WrapperComparator.COMPARATOR);
                     Collections.reverse(wrapperClassesList);
                 }
-
+                /**
+                 * 关于为什么要使用wrapper的思考？
+                 * Wrapper其实是一种装饰者模式，和AOP一样可以对核心业务进行增强等等
+                 * 在这里如果需要对拓展实例做自定义的处理，可以在类上加Wrapper注解
+                 * 再增加一些具体的wrapper，这样在这里就可以灵活的处理业务
+                 *
+                 * 不知是否是上面意义？
+                 */
                 if (CollectionUtils.isNotEmpty(wrapperClassesList)) {
+                    // 循环创建 Wrapper 实例
                     for (Class<?> wrapperClass : wrapperClassesList) {
                         Wrapper wrapper = wrapperClass.getAnnotation(Wrapper.class);
                         if (wrapper == null
                                 || (ArrayUtils.contains(wrapper.matches(), name) && !ArrayUtils.contains(wrapper.mismatches(), name))) {
+                            // 将当前 instance 作为参数传给 Wrapper 的构造方法，并通过反射创建 Wrapper 实例。
+                            // 然后向 Wrapper 实例中注入依赖，最后将 Wrapper 实例再次赋值给 instance 变量
                             instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                         }
                     }
                 }
             }
-
+            //如实现了Lifecycle接口，在这里会初始化实例的Lifecycle
             initExtension(instance);
             return instance;
         } catch (Throwable t) {
@@ -751,12 +787,20 @@ public class ExtensionLoader<T> {
         return getExtensionClasses().get(name);
     }
 
+    /**
+     * 我们在通过名称获取拓展类之前，
+     * 首先需要根据配置文件解析出拓展项名称到拓展类的映射关系表（Map<名称, 拓展类>），
+     * 之后再根据拓展项名称从映射关系表中取出相应的拓展类即可
+     * @return
+     */
     private Map<String, Class<?>> getExtensionClasses() {
+        // 从缓存中获取已加载的拓展类
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
             synchronized (cachedClasses) {
                 classes = cachedClasses.get();
                 if (classes == null) {
+                    // 加载拓展类
                     classes = loadExtensionClasses();
                     cachedClasses.set(classes);
                 }
@@ -765,8 +809,10 @@ public class ExtensionLoader<T> {
         return classes;
     }
 
+
     /**
-     * synchronized in getExtensionClasses
+     * 加载拓展类
+     * @return
      */
     private Map<String, Class<?>> loadExtensionClasses() {
         cacheDefaultExtensionName();
@@ -785,6 +831,7 @@ public class ExtensionLoader<T> {
      * extract and cache default extension name if exists
      */
     private void cacheDefaultExtensionName() {
+        //获取 SPI 注解，这里的 type 变量是在调用 getExtensionLoader 方法时传入的
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
         if (defaultAnnotation == null) {
             return;
