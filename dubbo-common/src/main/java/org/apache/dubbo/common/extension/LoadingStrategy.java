@@ -18,8 +18,15 @@ package org.apache.dubbo.common.extension;
 
 import org.apache.dubbo.common.lang.Prioritized;
 
+/**
+ * 这里封装了对于dubbo加载的分类和优先级，并且继承了Prioritized接口，是为了后面的排序
+ * 目前分了3类
+ * 1、DubboInternalLoadingStrategy--->dubbo内部class加载配置
+ * 2、DubboLoadingStrategy        --->dubbo内部一些转换器等配置
+ * 3、ServicesLoadingStrategy     --->dubbo的service加载配置
+ */
 public interface LoadingStrategy extends Prioritized {
-
+    //加载的路径
     String directory();
 
     default boolean preferExtensionClassLoader() {
@@ -30,11 +37,9 @@ public interface LoadingStrategy extends Prioritized {
         return null;
     }
 
+
     /**
-     * Indicates current {@link LoadingStrategy} supports overriding other lower prioritized instances or not.
-     *
-     * @return if supports, return <code>true</code>, or <code>false</code>
-     * @since 2.7.7
+     * 如果出现重复的实例，此字段用来标识是否覆盖其他低优先级的实例
      */
     default boolean overridden() {
         return false;

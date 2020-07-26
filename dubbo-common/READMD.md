@@ -1,3 +1,13 @@
 ##公共逻辑模块：包括 Util 类和通用模型
 
 ##serialize 层放在 common 模块中，以便更大程度复用
+
+##dubbo的SPI整体关系加载过程
++ 1、首先使用ExtensionLoader.getExtensionLoader时会构建一个叫ExtensionFactory的loader，这个loader和
+加载我们自定的拓展类的loader一样，也是一个ExtensionLoader，但是这个loader是用来加载dubbo自己的一些东西
+例如AdaptiveExtension，加载过程和加载我们自定义的一些拓展是一样的，但是唯一不同的是它没有自己的
+ExtensionFactory
+
++ 2、第二步就是将加载得到的ExtensionFactory再创建一个新的ExtensionLoader，这样对于每一个type(可以认为是一个接口)
+就会有自己的一个ExtensionLoader和ExtensionFactory，加载的过程就是读取META-INF/dubbo/下的文件，然后一行一行的解析
+如果有Adptive或者Active或者Wrapper那么就会单独存储，不会跟所有的扩展类存储在一起，减少了内存的占用（因为每个都只存一份）
