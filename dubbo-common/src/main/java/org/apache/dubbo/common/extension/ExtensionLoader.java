@@ -612,9 +612,15 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 获取自适应拓展
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
+        //先查询缓存
         Object instance = cachedAdaptiveInstance.get();
+        //缓存未命中
         if (instance == null) {
             if (createAdaptiveInstanceError != null) {
                 throw new IllegalStateException("Failed to create adaptive instance: " +
@@ -626,7 +632,9 @@ public class ExtensionLoader<T> {
                 instance = cachedAdaptiveInstance.get();
                 if (instance == null) {
                     try {
+                        // 创建自适应拓展
                         instance = createAdaptiveExtension();
+                        // 设置自适应拓展到缓存中
                         cachedAdaptiveInstance.set(instance);
                     } catch (Throwable t) {
                         createAdaptiveInstanceError = t;
@@ -1152,6 +1160,12 @@ public class ExtensionLoader<T> {
         return name.toLowerCase();
     }
 
+    /**
+     * 1、调用 getAdaptiveExtensionClass 方法获取自适应拓展 Class 对象
+     * 2、通过反射进行实例化
+     * 3、调用 injectExtension 方法向拓展实例中注入依赖
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
@@ -1162,6 +1176,12 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 调用 getExtensionClasses 获取所有的拓展类
+     * 检查缓存，若缓存不为空，则返回缓存
+     * 若缓存为空，则调用 createAdaptiveExtensionClass 创建自适应拓展类
+     * @return
+     */
     private Class<?> getAdaptiveExtensionClass() {
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {
@@ -1170,10 +1190,19 @@ public class ExtensionLoader<T> {
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
+    /**
+     * createAdaptiveExtensionClass 方法用于生成自适应拓展类，
+     * 该方法首先会生成自适应拓展类的源码，
+     * 然后通过 Compiler 实例（Dubbo 默认使用 javassist 作为编译器）编译源码，得到代理类 Class 实例
+     * @return
+     */
     private Class<?> createAdaptiveExtensionClass() {
+        // 构建自适应拓展代码
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
-        org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
+        // 获取编译器实现类
+        org.apache.dubbo.common.compiler.Compiler compiler =
+                ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
         return compiler.compile(code, classLoader);
     }
 

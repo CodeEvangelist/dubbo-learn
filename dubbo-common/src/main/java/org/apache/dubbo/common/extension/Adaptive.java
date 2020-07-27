@@ -24,36 +24,33 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+
 /**
- * Provide helpful information for {@link ExtensionLoader} to inject dependency extension instance.
- *
- * @see ExtensionLoader
- * @see URL
+ * Adaptive 可注解在类或方法上。
+ * 当 Adaptive 注解在类上时，Dubbo 不会为该类生成代理类。
+ * 注解在方法（接口方法）上时，Dubbo 则会为该方法生成代理逻辑。
+ * Adaptive 注解在类上的情况很少，在 Dubbo 中，仅有两个类被 Adaptive 注解了，
+ * 分别是 AdaptiveCompiler 和 AdaptiveExtensionFactory。
+ * 此种情况，表示拓展的加载逻辑由人工编码完成。
+ * 更多时候，Adaptive 是注解在接口方法上的，表示拓展的加载逻辑需由框架自动生成
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Adaptive {
     /**
-     * Decide which target extension to be injected. The name of the target extension is decided by the parameter passed
-     * in the URL, and the parameter names are given by this method.
-     * <p>
-     * If the specified parameters are not found from {@link URL}, then the default extension will be used for
-     * dependency injection (specified in its interface's {@link SPI}).
-     * <p>
-     * For example, given <code>String[] {"key1", "key2"}</code>:
-     * <ol>
-     * <li>find parameter 'key1' in URL, use its value as the extension's name</li>
-     * <li>try 'key2' for extension's name if 'key1' is not found (or its value is empty) in URL</li>
-     * <li>use default extension if 'key2' doesn't exist either</li>
-     * <li>otherwise, throw {@link IllegalStateException}</li>
-     * </ol>
-     * If the parameter names are empty, then a default parameter name is generated from interface's
-     * class name with the rule: divide classname from capital char into several parts, and separate the parts with
-     * dot '.', for example, for {@code org.apache.dubbo.xxx.YyyInvokerWrapper}, the generated name is
-     * <code>String[] {"yyy.invoker.wrapper"}</code>.
+     * value参数决定了哪一个目标扩展被注入，扩展类的名称放在URL上{@link URL}
+     * 而参数的key则是由value决定
      *
-     * @return parameter names in URL
+     * 如果参数没有在URL中被找到，那么就会使用默认的扩展作为依赖注入（一般是有{@link SPI}注解的接口）
+     *
+     * 使用举例：
+     * 如果这里的value={"key1", "key2"},在URL发现了参数key1，那么使用参数对应的值作为拓展的对象
+     * 如果key没有发现，那么使用key2，如果key2在URL中也没有被发现，那么使用默认的拓展，如果还是没有，
+     * 那么会抛出{@link IllegalStateException}异常
+     *
+     * 如果此value为空，那么会有一个生成value的规则：分割class名称，并且以'.'分隔开来，
+     * 举例:如果是org.apache.dubbo.xxx.YyyInvokerWrapper的扩展，那么生成的value={"yyy.invoker.wrapper"}
      */
     String[] value() default {};
 

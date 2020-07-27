@@ -72,6 +72,10 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+        //为什么这里不直接了当的根据URL来获取对应的extension呢，例如下面这样？
+        //ExtensionLoader.getExtensionLoader(Transporter.class).getExtension("xxx").connect(handler);
+        //原因是如果有多个方法那么需要写多次，而且可能是一些用户定义的扩展类，这样用户也需要去写判断
+        //使用getAdaptiveExtension()动态获取一个自适应拓展类帮助我们减少重复代码，实现约定优于配置
         return getTransporter().connect(url, handler);
     }
 
