@@ -30,6 +30,12 @@ import org.springframework.core.Ordered;
  *
  * @since 2.7.5
  */
+
+/**
+ * 从dubbo的tag 2.7.5以后，此类代替ServiceBean,负责作为Spring和Dubbo之间的桥梁
+ * 当spring启动完成，会调用aware接口，也就会调用到此类中的onApplicationContextEvent方法，
+ * 进行服务暴露的过程
+ */
 public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicationContextEventListener
         implements Ordered {
 

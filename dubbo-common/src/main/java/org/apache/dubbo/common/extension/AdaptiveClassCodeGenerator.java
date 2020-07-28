@@ -206,6 +206,7 @@ public class AdaptiveClassCodeGenerator {
         if (adaptiveAnnotation == null) {
             return generateUnsupported(method);
         } else {
+            //获取方法上的URL参数的位置
             int urlTypeIndex = getUrlTypeIndex(method);
 
             // found parameter in URL type
