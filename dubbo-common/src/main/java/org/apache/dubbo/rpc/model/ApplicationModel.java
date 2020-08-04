@@ -34,6 +34,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * returned from them are of process scope. If you want to support multiple dubbo servers in one
  * single process, you may need to refactor those three classes.
  *
+ * {@link ExtensionLoader}, {@code DubboBootstrap}和此类都被设计成单例或静态的，所以在一个dubbo服务中
+ * 仅有一份，如果需要dubbo服务支持多个（互相隔离开的dubbo服务）,那么需要重写这三个类，因为这三个类包含了
+ * dubbo服务RPC过程中元数据信息（元数据指的是dubbo配置中心，服务提供者，服务消费者，服务运行环境，java编译器等等~~）
+ *
+ *
  * Represent a application which is using Dubbo and store basic metadata info for using
  * during the processing of RPC invoking.
  * <p>
@@ -59,10 +64,18 @@ public class ApplicationModel {
         }
     }
 
+    /**
+     * dubbo消费者
+     * @return
+     */
     public static Collection<ConsumerModel> allConsumerModels() {
         return getServiceRepository().getReferredServices();
     }
 
+    /**
+     * dubbo服务提供者
+     * @return
+     */
     public static Collection<ProviderModel> allProviderModels() {
         return getServiceRepository().getExportedServices();
     }
@@ -83,15 +96,23 @@ public class ApplicationModel {
             ext.initialize();
         }
     }
-
+    /**
+     * 服务运行的环境
+     */
     public static Environment getEnvironment() {
         return (Environment) LOADER.getExtension(Environment.NAME);
     }
-
+    /**
+     * 配置管理，包括一些路由规则等等
+     */
     public static ConfigManager getConfigManager() {
         return (ConfigManager) LOADER.getExtension(ConfigManager.NAME);
     }
 
+    /**
+     * dubbo服务仓库，包含了provider和consumer
+     * @return
+     */
     public static ServiceRepository getServiceRepository() {
         return (ServiceRepository) LOADER.getExtension(ServiceRepository.NAME);
     }
