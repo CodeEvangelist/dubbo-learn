@@ -512,22 +512,23 @@ public class DubboBootstrap extends GenericEventListener {
         if (!initialized.compareAndSet(false, true)) {
             return;
         }
-
+        //初始化dubbo数据
         ApplicationModel.initFrameworkExts();
-
+        //启动配置中心
         startConfigCenter();
-
+        //加载远程配置，例如注册中心，服务协议
         loadRemoteConfigs();
-
+        //全局配置检测，包括服务配置是否正常，是否符合约定规则
         checkGlobalConfigs();
 
         // @since 2.7.8
+        //启动数据中心
         startMetadataCenter();
-
+        //初始化数据服务
         initMetadataService();
-
+        //初始化暴露服务数据
         initMetadataServiceExports();
-
+        //初始化事件监听器
         initEventListener();
 
         if (logger.isInfoEnabled()) {
@@ -823,15 +824,24 @@ public class DubboBootstrap extends GenericEventListener {
     /**
      * 开始引导dubbo启动
      */
+    /**
+     * 开始引导启动dubbo服务
+     * 1、初始化数据
+     * 2、导出服务
+     * 3、引用服务
+     * @return
+     */
     public DubboBootstrap start() {
         if (started.compareAndSet(false, true)) {
             ready.set(false);
+            //初始化数据，检查配置等等
             initialize();
             if (logger.isInfoEnabled()) {
                 logger.info(NAME + " is starting...");
             }
             // 1. export Dubbo Services
             //暴露dubbo服务
+            //开始导出服务
             exportServices();
 
             // Not only provider register
@@ -841,7 +851,7 @@ public class DubboBootstrap extends GenericEventListener {
                 //3. Register the local ServiceInstance if required
                 registerServiceInstance();
             }
-
+            //引用服务
             referServices();
             if (asyncExportingFutures.size() > 0) {
                 new Thread(() -> {

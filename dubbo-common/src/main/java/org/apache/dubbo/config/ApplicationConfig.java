@@ -152,6 +152,7 @@ public class ApplicationConfig extends AbstractConfig {
 
     /**
      * Metadata type, local or remote, if choose remote, you need to further specify metadata center.
+     * 数据类型包括本地货远程，如果使用远程那么必须要指定远程数据中心
      */
     private String metadataType;
 
