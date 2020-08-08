@@ -52,16 +52,25 @@ public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicati
         this.dubboBootstrap = DubboBootstrap.getInstance();
     }
 
+    /**
+     * spring容器在启动过程时会调用此方法
+     * @param event {@link ApplicationContextEvent}
+     */
     @Override
     public void onApplicationContextEvent(ApplicationContextEvent event) {
+        //spring容器启动
         if (event instanceof ContextRefreshedEvent) {
+           //暴露服务
             onContextRefreshedEvent((ContextRefreshedEvent) event);
+        //spring容器关闭
         } else if (event instanceof ContextClosedEvent) {
+            //关闭服务
             onContextClosedEvent((ContextClosedEvent) event);
         }
     }
 
     private void onContextRefreshedEvent(ContextRefreshedEvent event) {
+        //暴露服务
         dubboBootstrap.start();
     }
 
