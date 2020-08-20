@@ -41,7 +41,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
+//开启dubbo配置，
 @EnableDubboConfig
+//扫描dubbo需要在spring容器中注册的各种引导Processor
+//例如ServiceClassPostProcessor
 @DubboComponentScan
 public @interface EnableDubbo {
 

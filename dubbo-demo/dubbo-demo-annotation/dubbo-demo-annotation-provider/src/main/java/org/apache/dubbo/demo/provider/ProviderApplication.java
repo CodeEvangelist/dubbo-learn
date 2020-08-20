@@ -19,18 +19,39 @@ package org.apache.dubbo.demo.provider;
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-public class Application {
+import org.apache.dubbo.config.spring.beans.factory.annotation.ServiceClassPostProcessor;
+
+import org.apache.dubbo.config.spring.context.DubboBootstrapApplicationListener;
+import org.springframework.context.event.ApplicationContextEvent;
+import org.apache.dubbo.config.bootstrap.DubboBootstrap;
+
+public class ProviderApplication {
+    /**启动过程
+     * ->Spring容器启动
+     * ->注册ServiceClassPostProcessor
+     * ->调用{@linkplain ServiceClassPostProcessor#postProcessBeanDefinitionRegistry(BeanDefinitionRegistry)}
+     * ->加载{@link DubboBootstrapApplicationListener}
+     * ->Spring容器启动完成
+     * ->调用相应的Listener
+     * ->调用{@linkplain DubboBootstrapApplicationListener#onApplicationContextEvent(ApplicationContextEvent)}
+     * ->{@linkplain DubboBootstrap#start()}开始启动
+     * ->...省略很多dubbo服务暴露，注册详细说明等等
+     * ->{@link DubboBootstrap}启动完成
+     */
     public static void main(String[] args) throws Exception {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ProviderConfiguration.class);
         context.start();
         System.in.read();
     }
-
+    //首先spring会扫描到此Configuration
+    //当然会加载此类之上的EnableDoubbo注解
+    //@EnableDubbo中引入了很多的配置类，包括dubbo核心类，配置类等等
     @Configuration
     @EnableDubbo(scanBasePackages = "org.apache.dubbo.demo.provider")
     @PropertySource("classpath:/spring/dubbo-provider.properties")
@@ -38,7 +59,7 @@ public class Application {
         @Bean
         public RegistryConfig registryConfig() {
             RegistryConfig registryConfig = new RegistryConfig();
-            registryConfig.setAddress("zookeeper://127.0.0.1:2181");
+            registryConfig.setAddress("zookeeper://192.168.1.107:2181");
             return registryConfig;
         }
     }
