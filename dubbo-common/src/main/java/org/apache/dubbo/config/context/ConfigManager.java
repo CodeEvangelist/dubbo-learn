@@ -61,6 +61,9 @@ import static org.apache.dubbo.config.AbstractConfig.getTagName;
 import static org.apache.dubbo.config.Constants.PROTOCOLS_SUFFIX;
 import static org.apache.dubbo.config.Constants.REGISTRIES_SUFFIX;
 
+/**
+ * dubbo配置管理
+ */
 public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigManager.class);
@@ -68,7 +71,13 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
     public static final String NAME = "config";
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-
+    /**
+     * 放置了基本所有dubbo中需要用的配置数据
+     * 例如注册中心，协议，应用信息等等
+     * 以注册中心和协议举例具体格式是,
+     * registry->{@link RegistryConfig}
+     * protocol->{@link ProtocolConfig}
+     */
     final Map<String, Map<String, AbstractConfig>> configsCache = newMap();
 
     public ConfigManager() {
@@ -301,7 +310,12 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
         serviceConfigs.forEach(this::addService);
     }
 
+    /**
+     * 获取所有的provider的服务的配置信息
+     * @return
+     */
     public Collection<ServiceConfigBase> getServices() {
+        //通过tag获取provider的服务的配置信息
         return getConfigs(getTagName(ServiceConfigBase.class));
     }
 
@@ -399,10 +413,23 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
         });
     }
 
+    /**
+     * 根据类型获取配置，没有返回一个空的Map
+     * @param configType 类型
+     * @param <C>
+     * @return
+     */
     protected <C extends AbstractConfig> Map<String, C> getConfigsMap(String configType) {
         return (Map<String, C>) read(() -> configsCache.getOrDefault(configType, emptyMap()));
     }
 
+    /**
+     * 这个是通用于从{@linkplain ConfigManager#configsCache}根据configType来获取对应的配置信息
+     * 包括提供者，注册，协议，消费者等等，具体信息详见{@link ConfigManager}
+     * @param configType 类型
+     * @param <C>
+     * @return
+     */
     protected <C extends AbstractConfig> Collection<C> getConfigs(String configType) {
         return (Collection<C>) read(() -> getConfigsMap(configType).values());
     }

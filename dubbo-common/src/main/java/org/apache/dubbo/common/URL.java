@@ -1512,6 +1512,13 @@ class URL implements Serializable {
         return buildKey(inf, getParameter(GROUP_KEY), getParameter(VERSION_KEY));
     }
 
+    /**
+     * 这里是为服务构建唯一标识
+     * @param path    路径，大部分情况是接口名称
+     * @param group   服务分组
+     * @param version 服务版本
+     * @return
+     */
     public static String buildKey(String path, String group, String version) {
         return BaseServiceMetadata.buildServiceKey(path, group, version);
     }

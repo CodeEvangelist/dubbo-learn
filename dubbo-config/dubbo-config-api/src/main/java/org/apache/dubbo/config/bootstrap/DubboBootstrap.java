@@ -150,7 +150,9 @@ public class DubboBootstrap extends GenericEventListener {
     private final Environment environment;
 
     private ReferenceConfigCache cache;
-
+    /**
+     * 是否异步导出
+     */
     private volatile boolean exportAsync;
 
     private volatile boolean referAsync;
@@ -1031,6 +1033,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private void exportServices() {
+        //configManager中已经初始化了registry,protocol
         configManager.getServices().forEach(sc -> {
             // TODO, compatible with ServiceConfig.export()
             ServiceConfig serviceConfig = (ServiceConfig) sc;

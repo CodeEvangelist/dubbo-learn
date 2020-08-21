@@ -55,6 +55,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     /**
      * The reference of the interface implementation
+     * 接口的实现类，真正的服务提供者
      */
     protected T ref;
 
@@ -398,6 +399,11 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return DUBBO + ".service." + interfaceName;
     }
 
+    /**
+     * 从这里可以看到，服务命名方式是采用接口名称，组名，版本号来唯一确定的
+     * 也就说明->你可以将同一个服务暴露到不同的两个组，或者以不同的版本来暴露两次服务
+     * @return
+     */
     @Parameter(excluded = true)
     public String getUniqueServiceName() {
         return URL.buildKey(interfaceName, getGroup(), getVersion());

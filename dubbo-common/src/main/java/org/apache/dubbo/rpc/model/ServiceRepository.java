@@ -111,6 +111,18 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
 
     }
 
+    /**
+     * 这里刚好可以说明一下服务配置信息的流动过程
+     * serviceConfig->serviceMetadata,serviceModel->ProviderModel
+     * 这里会构建一个ProviderModel
+     * @param serviceKey       服务唯一key
+     * 格式见{@linkplain org.apache.dubbo.common.BaseServiceMetadata#buildServiceKey}
+     *
+     * @param serviceInstance  真正的服务实体
+     * @param serviceModel     服务描述
+     * @param serviceConfig    服务配置
+     * @param serviceMetadata  服务元数据
+     */
     public void registerProvider(String serviceKey,
                                  Object serviceInstance,
                                  ServiceDescriptor serviceModel,
@@ -122,7 +134,12 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
         providersWithoutGroup.putIfAbsent(keyWithoutGroup(serviceKey), providerModel);
     }
 
+    /**
+     * @param serviceKey
+     * @return
+     */
     private static String keyWithoutGroup(String serviceKey) {
+        //接口名称+":"+版本号
         return interfaceFromServiceKey(serviceKey) + ":" + versionFromServiceKey(serviceKey);
     }
 

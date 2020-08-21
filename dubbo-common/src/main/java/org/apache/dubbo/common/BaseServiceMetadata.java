@@ -21,6 +21,11 @@ import org.apache.dubbo.common.utils.StringUtils;
 /**
  * 2019-10-10
  */
+
+/**
+ * 服务元数据
+ * 包含版本号，分组，接口名
+ */
 public class BaseServiceMetadata {
     public static final char COLON_SEPERATOR = ':';
 
@@ -29,6 +34,14 @@ public class BaseServiceMetadata {
     protected String version;
     protected volatile String group;
 
+    /**
+     * 这里确定了服务唯一名称的格式
+     * ->group/path:version
+     * @param path      路径，大部分情况是接口名称
+     * @param group     服务分组
+     * @param version   服务版本
+     * @return
+     */
     public static String buildServiceKey(String path, String group, String version) {
         StringBuilder buf = new StringBuilder();
         if (group != null && group.length() > 0) {

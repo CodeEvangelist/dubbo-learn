@@ -28,6 +28,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * data related to service level such as name, version, classloader of business service,
  * security info, etc. Also with a AttributeMap for extension.
  */
+
+/**
+ * 该类目前在Dubbo内部没有使用。
+ * 此类记录了服务级别相关的数据，例如名称，版本，业务服务的类加载器，
+ * 安全信息等
+ */
 public class ServiceMetadata extends BaseServiceMetadata {
 
     private String defaultGroup;

@@ -63,6 +63,11 @@ public abstract class AbstractConfig implements Serializable {
 
     /**
      * The suffix container
+     *
+     * 这是{@linkplain ConfigManager#configsCache}容器中的标识，
+     * 例如是provider的服务，那么在获取tag时传入的是{@link ServiceConfigBase}
+     * 如果是consumer的服务，那么在获取tag时传入的是{@link ReferenceConfigBase}
+     * 如果是register等dubbo自生的配置，那么获取tag时传入的是{@link ApplicationConfig,RegistryConfig,MonitorConfig...}
      */
     private static final String[] SUFFIXES = new String[]{"Config", "Bean", "ConfigBase"};
 
@@ -96,6 +101,12 @@ public abstract class AbstractConfig implements Serializable {
         return value;
     }
 
+    /**
+     * 获取configCache的标识
+     * 目前有三个，在这里会通过后缀比较来确定传入的是什么类型，从而转化为对应的tag
+     * @param cls
+     * @return
+     */
     public static String getTagName(Class<?> cls) {
         String tag = cls.getSimpleName();
         for (String suffix : SUFFIXES) {
@@ -104,6 +115,7 @@ public abstract class AbstractConfig implements Serializable {
                 break;
             }
         }
+        //会将tag转化为小写
         return StringUtils.camelToSplitName(tag, "-");
     }
 

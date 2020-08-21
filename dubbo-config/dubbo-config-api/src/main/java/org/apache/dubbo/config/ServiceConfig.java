@@ -310,9 +310,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
+        //算是一个本地仓库，里面包含了所有的服务，也会为provider和consumer开来
         ServiceRepository repository = ApplicationModel.getServiceRepository();
+        //这是将当前需要暴露的服务注册到仓库中
         ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
         repository.registerProvider(
+
                 getUniqueServiceName(),
                 ref,
                 serviceDescriptor,
