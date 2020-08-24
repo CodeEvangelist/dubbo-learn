@@ -28,7 +28,9 @@ import org.apache.dubbo.common.utils.StringUtils;
  */
 public class BaseServiceMetadata {
     public static final char COLON_SEPERATOR = ':';
-
+    /**
+     * 服务的映射路径
+     */
     protected String serviceKey;
     protected String serviceInterfaceName;
     protected String version;

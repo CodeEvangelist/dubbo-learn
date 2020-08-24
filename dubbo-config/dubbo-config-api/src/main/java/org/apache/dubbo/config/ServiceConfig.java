@@ -324,7 +324,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         );
 
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
-
+        //先获取到协议列表，根据不同的协议拼接相应的服务映射路径，再循环的将服务使用不同的协议暴露到不同的注册中心
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                     .map(p -> p + "/" + path)
@@ -338,8 +338,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
     }
 
+    /**
+     *
+     * @param protocolConfig 暴露使用的协议
+     * @param registryURLs   注册中心地址
+     */
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
+        //默认使用dubbo协议
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
         }
@@ -454,6 +460,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // export service
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
+        //上面组装的map在这里统一封装在URL中了
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         // You can customize Configurator to append extra parameters

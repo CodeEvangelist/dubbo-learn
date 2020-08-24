@@ -32,7 +32,23 @@ import org.apache.dubbo.common.extension.SPI;
 public interface Transporter {
 
     /**
-     * Bind a server.
+     * 以这里举例说明dubbo对于接口的SPI
+     *
+     * 这里默认的扩展实现是netty，如果url中包含了server，那么加载dubbo中key对应server的扩展类，
+     * 如果是transporter，那么加载dubbo中key对应transporter的扩展类
+     *
+     * 例如url如下:
+     * dubbo://192.168.1.37:20880/org.apache.dubbo.demo.DemoService?
+     * anyhost=true&application=dubbo-demo-annotation-provider
+     * &bind.ip=192.168.1.37&bind.port=20880&channel.readonly.sent=true&codec=dubbo
+     * &deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&heartbeat=60000
+     * &interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync
+     * &pid=18772&release=&side=provider&timestamp=1598259428004
+     *
+     * 这样url中没有包含server也没有包含transporter，这样默认加载key对应netty的拓展
+     * 可发现有两个Netty的实现类，一个是netty3，还有一个是netty4，但是在dubbo的SPI配置文件中，
+     * netty3配置{@linkplain org.apache.dubbo.remoting.transport.netty.NettyTransporter}对应的key就是netty3，与上面SPI注解中的netty不对应，
+     * netty4配置{@linkplain org.apache.dubbo.remoting.transport.netty4.NettyTransporter}对应的key是netty和netty4，于上面SPI对应
      *
      * @param url     server url
      * @param handler

@@ -30,6 +30,8 @@ import java.util.Set;
 /**
  * ServiceModel and ServiceMetadata are to some extend duplicated with each other.
  * We should merge them in the future.
+ *（ServiceModel和ServiceMetadata具有非常多的重复，计划未来会合并它们）
+ * 服务的整体描述
  */
 public class ServiceDescriptor {
     private final String serviceName;

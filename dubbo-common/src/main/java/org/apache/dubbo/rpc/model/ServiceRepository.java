@@ -38,6 +38,9 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
     public static final String NAME = "repository";
 
     // services
+    /**
+     * 服务缓存，key是服务的映射路径，value是服务的整体描述
+     */
     private ConcurrentMap<String, ServiceDescriptor> services = new ConcurrentHashMap<>();
 
     // consumers
@@ -71,14 +74,21 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
      * 1. services with different interfaces are not allowed to have the same path.
      * 2. services share the same interface but has different group/version can share the same path.
      * 3. path's default value is the name of the interface.
+     * 1.不同的接口不允许有相同的映射路径
+     * 2.同一个接口只能通过不同的组和版本才能使用相同的映射路径分享多次
+     * 3.映射路径默认值就是接口名称
      *
-     * @param path
-     * @param interfaceClass
+     * 从这里来看，所谓注册服务其实是将服务使用ServiceDescriptor整理，然后放在services的缓存中
+     *
+     * @param path            服务的映射路径（规则是ContextPath+接口名称）
+     * @param interfaceClass  接口
      * @return
      */
     public ServiceDescriptor registerService(String path, Class<?> interfaceClass) {
         ServiceDescriptor serviceDescriptor = registerService(interfaceClass);
         // if path is different with interface name, add extra path mapping
+        //由于path是在前面组装的，主装的规则也是contextPath+接口名称，如果path不等于接口名称，说明
+        //contextPath不为空，这样同一个接口就需要根据不同ContextPath暴露多个服务
         if (!interfaceClass.getName().equals(path)) {
             services.putIfAbsent(path, serviceDescriptor);
         }
