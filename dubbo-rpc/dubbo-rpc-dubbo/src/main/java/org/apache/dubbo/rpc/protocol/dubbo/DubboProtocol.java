@@ -277,6 +277,13 @@ public class DubboProtocol extends AbstractProtocol {
         return DEFAULT_PORT;
     }
 
+    /**
+     * 本地服务最终的暴露
+     * @param invoker Service invoker
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl();
@@ -299,8 +306,9 @@ public class DubboProtocol extends AbstractProtocol {
 
             }
         }
-
+        //开放服务
         openServer(url);
+        //注册序列优化？？暂时未知
         optimizeSerialization(url);
 
         return exporter;

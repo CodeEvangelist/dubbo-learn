@@ -1032,6 +1032,10 @@ public class DubboBootstrap extends GenericEventListener {
         return exporter.supports(getMetadataType());
     }
 
+    /**
+     * 说明一下服务导出的过程
+     *
+     */
     private void exportServices() {
         //configManager中已经初始化了registry,protocol
         configManager.getServices().forEach(sc -> {
