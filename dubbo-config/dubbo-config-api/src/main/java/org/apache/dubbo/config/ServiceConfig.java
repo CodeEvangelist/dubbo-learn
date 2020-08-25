@@ -46,6 +46,7 @@ import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.ServiceDescriptor;
 import org.apache.dubbo.rpc.model.ServiceRepository;
+import org.apache.dubbo.rpc.protocol.InvokerWrapper;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.apache.dubbo.rpc.support.ProtocolUtils;
 
@@ -114,7 +115,36 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * A delayed exposure service timer
      */
     private static final ScheduledExecutorService DELAY_EXPORT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboServiceDelayExporter", true));
-
+    /**
+     * 加载类的时候会初始化所有Protocol的实现并且生成一个自适应代理类存放于此
+     * 主要实现就是dubbo的自适应扩展，以此举例说明dubbo的自适应扩展中的wapper使用
+     *
+     * Protocol的实现有
+     * {@link org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper}
+     * {@link org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper}
+     * {@link org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol}
+     *
+     * dubbo重要用到的是dubbo，但是又有一些非Dubbo的核心代码，这时就产生了上面两个wapper
+     * 具体是在使用ExtensionLoader.getExtensionLoader(Protocol.class)时会把上述3个
+     * class类都加载进ExtensionLoader，然后再使用getAdaptiveExtension时会产生一个代理类
+     * 代理类大体逻辑如下{
+     *     if(flag =xxx){
+     *          ExtensionLoader.getExtension("xxx").invoke(xx);
+     *     }else if( flag ==yy){
+     *          ExtensionLoader.getExtension("yy").invoke(yy);
+     *     }else{
+     *          ExtensionLoader.getExtension("default").invoke(default);
+     *     }
+     * }
+     * 并且wapper类都会被放进wapper缓存,具体放入wapper时机见
+     * {@linkplain ExtensionLoader#loadClass(Map, java.net.URL, Class, String, boolean)}
+     *
+     * 而最终创建实例是在{@linkplain ExtensionLoader#getExtension(String)}时创建的
+     * 这是会用wapper缓存将需要创建的instance包装起来，此时调用instance的方法，其实就是在
+     * 调用wapper中同名方法，因为实例已经变成包装实例了，如果有多个wapper，那么就会一层一层包装
+     * 具体循环创建包装对象见{@linkplain ExtensionLoader#createExtension(String, boolean)}
+     *
+     */
     private static final Protocol PROTOCOL = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     /**
@@ -456,7 +486,6 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
         //init serviceMetadata attachments
         serviceMetadata.getAttachments().putAll(map);
-
         // export service
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
@@ -660,6 +689,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             if (provider != null && (portToBind == null || portToBind == 0)) {
                 portToBind = provider.getPort();
             }
+            //在这里第一次加载了dubbo的Protocol，也将DubboProtocol第一次初始化在ExtensionLoader中
+            //初始化DubboProtocol时，已经有两个Protocol的Wapper，所以初始化的DubboProtocol是被装饰后的的
             final int defaultPort = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(name).getDefaultPort();
             if (portToBind == null || portToBind == 0) {
                 portToBind = defaultPort;

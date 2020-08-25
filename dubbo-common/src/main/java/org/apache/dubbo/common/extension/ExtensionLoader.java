@@ -1031,6 +1031,7 @@ public class ExtensionLoader<T> {
             // 检测 clazz 是否是 Wrapper 类型
         } else if (isWrapperClass(clazz)) {
             //其实wrapper就是将对象传入另一个类的构造方法
+            //缓存wapper
             cacheWrapperClass(clazz);
         } else {
             // 检测 clazz 是否有默认的构造方法，如果没有，则抛出异常
@@ -1119,7 +1120,7 @@ public class ExtensionLoader<T> {
     /**
      * 这里为什么没有和之前Adptive缓存用单个class，而是用了ConcurrentHashSet;
      * 1、使用set是为了不重复
-     * 2、是防止有过个wapper
+     * 2、是防止有多个wapper
      * @param clazz
      */
     private void cacheWrapperClass(Class<?> clazz) {
