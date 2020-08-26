@@ -197,6 +197,10 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         this.services = services;
     }
 
+    /**
+     * 初始化dubbo的consumer
+     * @return
+     */
     public synchronized T get() {
         if (destroyed) {
             throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
@@ -227,6 +231,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         dispatch(new ReferenceConfigDestroyedEvent(this));
     }
 
+    /**
+     * 开始初始化dubbo的consumer
+     */
     public synchronized void init() {
         if (initialized) {
             return;
@@ -301,7 +308,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         map.put(REGISTER_IP_KEY, hostToRegistry);
 
         serviceMetadata.getAttachments().putAll(map);
-
+        //创建代理类，真正的发送请求实体
         ref = createProxy(map);
 
         serviceMetadata.setTarget(ref);

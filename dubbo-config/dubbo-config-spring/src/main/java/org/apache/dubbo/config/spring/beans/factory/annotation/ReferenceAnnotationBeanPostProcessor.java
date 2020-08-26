@@ -55,6 +55,10 @@ import static org.springframework.util.StringUtils.hasText;
  * @see com.alibaba.dubbo.config.annotation.Reference
  * @since 2.5.7
  */
+
+/**
+ * 可以认为是DubboReference的注解处理器，在容器启动过程就初始化好，方便调用
+ */
 public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBeanPostProcessor implements
         ApplicationContextAware {
 
@@ -118,6 +122,11 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         return Collections.unmodifiableMap(injectedMethodReferenceBeanCache);
     }
 
+    /**
+     * DubboRefence注解处理，bean初始化
+     * 进行时机为spring容器的bean依赖注册阶段，对涉及到{@link DubboReference}的依赖进行注入
+     *
+     */
     @Override
     protected Object doGetInjectedBean(AnnotationAttributes attributes, Object bean, String beanName, Class<?> injectedType,
                                        InjectionMetadata.InjectedElement injectedElement) throws Exception {
