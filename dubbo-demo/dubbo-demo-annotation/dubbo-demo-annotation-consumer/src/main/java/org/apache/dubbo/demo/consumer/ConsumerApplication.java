@@ -37,12 +37,12 @@ public class ConsumerApplication {
      * dubbo的consumer服务引用过程
      * ->spring容器启动
      * ->扫描到{@link EnableDubbo}注解，spring在适当时机开始加载{@link org.apache.dubbo.config.annotation.DubboReference}注解处理器
-     * {@linkplain com.alibaba.spring.beans.factory.annotation.AbstractAnnotationBeanPostProcessor#getInjectedObject}
+     * 对包含DubboReference 注解的属性进行注入,然后到{@linkplain com.alibaba.spring.beans.factory.annotation.AbstractAnnotationBeanPostProcessor#getInjectedObject}
      * ->然后调用到{@linkplain org.apache.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor#doGetInjectedBean}
      * ->最后开始获取对应的Reference{@linkplain ReferenceConfig#get()}
      * ->开始检查配置，初始化引导器{@linkplain ReferenceConfig#init()}
      * ->然后创建Proxy{@linkplain ReferenceConfig#createProxy}
-     * ->spring将获取到的代理对象在依赖注入时放入
+     * ->spring将获取到的代理对象注入完成
      */
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ConsumerConfiguration.class);
