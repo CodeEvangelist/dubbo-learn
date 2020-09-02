@@ -28,6 +28,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.annotation.AnnotationAttributes;
 
+import java.util.Map;
+
 public class ConsumerApplication {
     /**
      * In order to make sure multicast registry works, need to specify '-Djava.net.preferIPv4Stack=true' before
@@ -47,6 +49,10 @@ public class ConsumerApplication {
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ConsumerConfiguration.class);
         context.start();
+        //下面直接从容器中获取发现获取不到接口的类，说明产生的代理类并没有放在spring容器中
+        //DemoService bean = (DemoService)context.getBean("demoService");
+        //String hello = bean.sayHello("world");
+        //这样却能用到dubbo的代理类，说明dubbo生成的代理类，实在注解处理的过程注入的
         DemoService service = context.getBean("demoServiceComponent", DemoServiceComponent.class);
         String hello = service.sayHello("world");
         System.out.println("result :" + hello);
