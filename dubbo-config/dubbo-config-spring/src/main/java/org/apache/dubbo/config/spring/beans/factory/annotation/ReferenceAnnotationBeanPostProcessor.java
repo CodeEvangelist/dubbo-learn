@@ -139,7 +139,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
          * The name of bean that is declared by {@link Reference @Reference} annotation injection
          */
         String referenceBeanName = getReferenceBeanName(attributes, injectedType);
-
+        //这里其实是提现初始化dubbo服务代理类对象
         ReferenceBean referenceBean = buildReferenceBeanIfAbsent(referenceBeanName, attributes, injectedType);
 
         boolean localServiceBean = isLocalServiceBean(referencedBeanName, referenceBean, attributes);

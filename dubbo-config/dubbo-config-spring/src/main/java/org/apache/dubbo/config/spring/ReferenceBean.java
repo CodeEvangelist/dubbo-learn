@@ -96,6 +96,12 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         beansOfTypeIncludingAncestors(applicationContext, SslConfig.class);
     }
 
+    /**
+     * 这里是代理类被注入到spring对象中做的初始化
+     * 详细见
+     * {@linkplain org.apache.dubbo.config.spring.beans.factory.annotation.ReferenceBeanBuilder#postConfigureBean(org.springframework.core.annotation.AnnotationAttributes, org.apache.dubbo.config.spring.ReferenceBean)}
+     * @throws Exception
+     */
     @Override
     @SuppressWarnings({"unchecked"})
     public void afterPropertiesSet() throws Exception {
