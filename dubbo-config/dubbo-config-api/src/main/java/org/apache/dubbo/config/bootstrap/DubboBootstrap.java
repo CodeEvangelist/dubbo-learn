@@ -107,8 +107,9 @@ import static org.apache.dubbo.remoting.Constants.CLIENT_KEY;
  * <p>
  * Get singleton instance by calling static method {@link #getInstance()}.
  * Designed as singleton because some classes inside Dubbo, such as ExtensionLoader, are designed only for one instance per process.
- *
+ * <p>
  * dubbo的引导类
+ *
  * @since 2.7.5
  */
 public class DubboBootstrap extends GenericEventListener {
@@ -831,6 +832,7 @@ public class DubboBootstrap extends GenericEventListener {
      * 1、初始化数据
      * 2、导出服务
      * 3、引用服务
+     *
      * @return
      */
     public DubboBootstrap start() {
@@ -1035,7 +1037,6 @@ public class DubboBootstrap extends GenericEventListener {
 
     /**
      * 说明一下服务导出的过程
-     *
      */
     private void exportServices() {
         //configManager中已经初始化了registry,protocol

@@ -53,6 +53,7 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+        //绑定获得一个远程服务
         return getTransporter().bind(url, handler);
     }
 

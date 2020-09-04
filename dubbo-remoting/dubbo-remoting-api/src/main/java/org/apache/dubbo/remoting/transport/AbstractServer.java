@@ -55,6 +55,12 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
 
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
+    /**
+     * 服务构建
+     * @param url
+     * @param handler
+     * @throws RemotingException
+     */
     public AbstractServer(URL url, ChannelHandler handler) throws RemotingException {
         super(url, handler);
         localAddress = getUrl().toInetSocketAddress();

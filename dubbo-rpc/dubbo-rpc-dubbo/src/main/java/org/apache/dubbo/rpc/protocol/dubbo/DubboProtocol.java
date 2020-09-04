@@ -314,6 +314,10 @@ public class DubboProtocol extends AbstractProtocol {
         return exporter;
     }
 
+    /**
+     * 使用指定协议将服务暴露在端口，使其可以让外界访问到
+     * @param url
+     */
     private void openServer(URL url) {
         // find server.
         String key = url.getAddress();
@@ -335,6 +339,11 @@ public class DubboProtocol extends AbstractProtocol {
         }
     }
 
+    /**
+     * 创建可访问的服务
+     * @param url
+     * @return
+     */
     private ProtocolServer createServer(URL url) {
         url = URLBuilder.from(url)
                 // send readonly event when server closes, it's enabled by default
@@ -351,6 +360,7 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeServer server;
         try {
+            //这里表现了服务暴露本质->将服务使用协议绑定在一端口上，使其可以供外界访问
             server = Exchangers.bind(url, requestHandler);
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);

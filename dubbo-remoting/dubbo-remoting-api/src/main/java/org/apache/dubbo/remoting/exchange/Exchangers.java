@@ -66,6 +66,7 @@ public class Exchangers {
         if (handler == null) {
             throw new IllegalArgumentException("handler == null");
         }
+        //这里通过key来选择不同扩展
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
         return getExchanger(url).bind(url, handler);
     }
