@@ -846,6 +846,7 @@ public class DubboBootstrap extends GenericEventListener {
             //开始导出服务
             exportServices();
 
+            //TODO?元数据服务导出？暂时未知
             // Not only provider register
             if (!isOnlyRegisterProvider() || hasExportedServices()) {
                 // 2. export MetadataService
@@ -853,7 +854,7 @@ public class DubboBootstrap extends GenericEventListener {
                 //3. Register the local ServiceInstance if required
                 registerServiceInstance();
             }
-            //引用服务
+            //TODO？引用服务，引用服务记得是在ReferenceBean创建的，暂时未知其意义?
             referServices();
             if (asyncExportingFutures.size() > 0) {
                 new Thread(() -> {
