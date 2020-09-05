@@ -48,6 +48,8 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.ServiceDescriptor;
 import org.apache.dubbo.rpc.model.ServiceRepository;
 import org.apache.dubbo.rpc.protocol.InvokerWrapper;
+import org.apache.dubbo.rpc.protocol.ProtocolFilterWrapper;
+import org.apache.dubbo.rpc.protocol.ProtocolListenerWrapper;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.apache.dubbo.rpc.support.ProtocolUtils;
 
@@ -149,7 +151,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     private static final ProxyFactory PROXY_FACTORY = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 
     /**
-     * Whether the provider has been exported
+     * 是否已经导出，这里使用了volatile关键字
      */
     private transient volatile boolean exported;
 
@@ -316,7 +318,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         postProcessConfig();
     }
 
-
+    /**
+     * 导出服务
+     *
+     * 这里使用了同步锁+volatile关键字保证线程安全
+     */
     protected synchronized void doExport() {
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
@@ -532,8 +538,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         }
                         //这里比较关键，不管是导出到本地还是远程都需要获取Invoker对象
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
+                        //这里的invoker是包含了注册中心的url,所以协议是以Registry为主
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
-                        //真正暴露服务的地方
+                        /**
+                         * 这里会根据wrapperInvoker获取自适应Protocol,自适应生成的代码见,不过这里还做了一些扩展操作，就是增加几层wapper
+                         * {@linkplain org.apache.dubbo.demo.provider.DubboSpiDetail#export(Invoker)}
+                         * {@link ProtocolFilterWrapper}
+                         * {@link ProtocolListenerWrapper}
+                         */
                         Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
                         exporters.add(exporter);
                     }
@@ -545,8 +557,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
                     //这里比较关键，不管是导出到本地还是远程都需要获取Invoker对象
                     Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, url);
+                    //由于这里不需要注册,所以生成的invoker对象的协议是真正的暴露协议，默认是dubbo
                     DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
-
+                    /**
+                     * 由于上面拿到的是真正的invoker，所以会获取协议为dubbo的自适应Protocol对象,不过这里还做了一些扩展操作，就是增加几层wapper
+                     * {@link ProtocolFilterWrapper}
+                     * {@link ProtocolListenerWrapper}
+                     */
                     Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
                     exporters.add(exporter);
                 }

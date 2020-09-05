@@ -19,11 +19,24 @@ package org.apache.dubbo.registry;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.Adaptive;
 import org.apache.dubbo.common.extension.SPI;
+import org.apache.dubbo.registry.support.AbstractRegistryFactory;
 
 /**
  * RegistryFactory. (SPI, Singleton, ThreadSafe)
- *
+ * SPI自适应扩展，单例，线程安全
  * @see org.apache.dubbo.registry.support.AbstractRegistryFactory
+ */
+
+/**
+ * 这里说明一下当注册中心为zookeeper时的自适应过程
+ * 1、当获取到注册中心，也就是URL中的协议为zookeeper时，这里自适应得到的扩展为
+ *   {@link org.apache.dubbo.registry.zookeeper.ZookeeperRegistryFactory}
+ * 2、但是ZookeeperRegistryFactory中没有重写getRegistry方法
+ * 3、这样便会调用到ZookeeperRegistryFactory的父类，也就是
+ *   {@linkplain AbstractRegistryFactory#getRegistry(URL)}
+ * 4、这样最终会调用到{@linkplain AbstractRegistryFactory#createRegistry(URL)}
+ * 5、而此时其实this表示的是ZookeeperRegistryFactory,这样便会重新调用到
+ *   {@linkplain org.apache.dubbo.registry.zookeeper.ZookeeperRegistryFactory#createRegistry(URL)}
  */
 @SPI("dubbo")
 public interface RegistryFactory {

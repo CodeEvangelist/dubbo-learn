@@ -192,7 +192,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     /**
-     * wapper会先分发到Registery的export
+     * 如果是需要注册的export,wapper会先分发到Registery的export
      * @param originInvoker
      * @param <T>
      * @return
@@ -202,6 +202,7 @@ public class RegistryProtocol implements Protocol {
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
         URL registryUrl = getRegistryUrl(originInvoker);
         // url to export locally
+        //在这里获取到provier的真正使用的暴露协议
         URL providerUrl = getProviderUrl(originInvoker);
 
         // Subscribe the override data
@@ -223,20 +224,27 @@ public class RegistryProtocol implements Protocol {
 
         // decide if we need to delay publish
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
+        //服务的注册
         if (register) {
+            /**
+             * 这里有自适应扩展，详情
+             * @see  RegistryFactory
+             */
             register(registryUrl, registeredProviderUrl);
         }
 
-        // register stated url on provider model
+        //在提供者模型上声明的注册地址
         registerStatedUrl(registryUrl, registeredProviderUrl, register);
 
-
+        //设置注册地址
         exporter.setRegisterUrl(registeredProviderUrl);
+        //注册订阅地址
         exporter.setSubscribeUrl(overrideSubscribeUrl);
 
         // Deprecated! Subscribe to override rules in 2.6.x or before.
+        //服务订阅
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
-
+        //服务暴露通知
         notifyExport(exporter);
         //Ensure that a new exporter instance is returned every time export
         return new DestroyableExporter<>(exporter);
@@ -259,13 +267,22 @@ public class RegistryProtocol implements Protocol {
         return serviceConfigurationListener.overrideUrl(providerUrl);
     }
 
+    /**
+     *
+     * 将服务暴露到本地端口
+     *
+     * @param originInvoker invoker对象
+     * @param providerUrl   提供者的url
+     * @param <T>
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker, URL providerUrl) {
         String key = getCacheKey(originInvoker);
 
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
-            //真正的根据协议暴露服务到本地
+            //真正的根据协议暴露服务到本地，这样Protocol就会获取到真正的扩展实例
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });
     }

@@ -38,6 +38,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.INVOKER_LISTENER
 
 /**
  * ListenerProtocol
+ *
+ * 实现dubbo 协议AOP的装饰者模式，根据order来确定优先级
+ * 并且使用了@Activate标识默认是属于激活状态
  */
 @Activate(order = 200)
 public class ProtocolListenerWrapper implements Protocol {
