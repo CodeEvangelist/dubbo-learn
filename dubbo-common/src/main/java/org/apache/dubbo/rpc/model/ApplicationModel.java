@@ -48,6 +48,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  */
 
+/**
+ * 在此对dubbo的数据模型使用图形做个说明，如下所示
+ *
+ *                           ApplicationModel
+ *                         /       |          \
+ *                        /        |           \
+ *                       /         |            \
+ *           ConfigManager      Environment       ServiceRepository
+ *          |    |       \               \            |      |     \
+ *   协议、注册  monitor   router，ssl   服务运行的环境  desc  Provider  Consumer
+ *
+ */
 public class ApplicationModel {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ApplicationModel.class);
     public static final String NAME = "application";
