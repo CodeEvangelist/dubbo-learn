@@ -241,8 +241,19 @@ public class RegistryProtocol implements Protocol {
         //注册订阅地址
         exporter.setSubscribeUrl(overrideSubscribeUrl);
 
+        /**
+         * 服务订阅与通知，以zookeeper为例
+         * 1、会根据服务和注册中心创建很多监听器，并且会为这些监听器创建对应的回调方法
+         *    {@linkplain org.apache.dubbo.registry.zookeeper.ZookeeperRegistry#doSubscribe(org.apache.dubbo.common.URL, org.apache.dubbo.registry.NotifyListener)}
+         * 2、针对每个监听器，会在zookeeper中创建不同的节点
+         * 3、利用zookeeper的节点事件通知机制，通知zookeeper客户端
+         *    {@linkplain org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.CuratorWatcherImpl#process(org.apache.zookeeper.WatchedEvent)}
+         * 4、开始针对不同的事件获得对应的监听器，监听器中在创建时已经设置好了对应的回调方式
+         * 5、回调对应的方法
+         */
         // Deprecated! Subscribe to override rules in 2.6.x or before.
-        //服务订阅
+        //服务订阅 这里是服务订阅的起始处，registry也是一个被装饰后的对象
+        //下一步 -> org.apache.dubbo.registry.ListenerRegistryWrapper.subscribe
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
         //服务暴露通知
         notifyExport(exporter);

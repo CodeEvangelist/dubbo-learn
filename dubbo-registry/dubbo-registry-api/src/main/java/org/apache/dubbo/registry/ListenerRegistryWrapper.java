@@ -99,9 +99,17 @@ public class ListenerRegistryWrapper implements Registry {
         }
     }
 
+    /**
+     * 这是服务订阅的第二步，进入装饰者
+     * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     * @param listener A listener of the change event, not allowed to be empty
+     */
     @Override
     public void subscribe(URL url, NotifyListener listener) {
         try {
+            //以zookeeper举例，这里由于zookeeper没有重写subscribe方法，
+            //所以这样调用会直接调用到zookeeper的父类 ->org.apache.dubbo.registry.support.FailbackRegistry.subscribe
+
             registry.subscribe(url, listener);
         } finally {
             if (CollectionUtils.isNotEmpty(listeners)) {

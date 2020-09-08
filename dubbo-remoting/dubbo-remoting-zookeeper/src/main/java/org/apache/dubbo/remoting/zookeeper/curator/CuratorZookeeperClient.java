@@ -281,6 +281,11 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             this.childListener = null;
         }
 
+        /**
+         * zookeeper自带的监听事件，用来做订阅、通知
+         * @param event
+         * @throws Exception
+         */
         @Override
         public void process(WatchedEvent event) throws Exception {
             // if client connect or disconnect to server, zookeeper will queue

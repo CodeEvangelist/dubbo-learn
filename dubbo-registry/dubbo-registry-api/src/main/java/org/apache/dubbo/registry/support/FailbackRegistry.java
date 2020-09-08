@@ -325,12 +325,19 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    /**
+     * 这里只是中转服务订阅
+     * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     * @param listener A listener of the change event, not allowed to be empty
+     */
     @Override
     public void subscribe(URL url, NotifyListener listener) {
         super.subscribe(url, listener);
         removeFailedSubscribed(url, listener);
         try {
             // Sending a subscription request to the server side
+            //这里开始真正针对不同的注册中心采用不同的实现，还是以zookeeper为例
+            //下一步调用到-> org.apache.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe
             doSubscribe(url, listener);
         } catch (Exception e) {
             Throwable t = e;
@@ -387,6 +394,12 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    /**
+     * 当zookeeper节点变化，会通知到这里
+     * @param url      consumer side url
+     * @param listener listener
+     * @param urls     provider latest urls
+     */
     @Override
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {

@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.annotation.AnnotationAttributes;
 
+import java.io.IOException;
 import java.util.Map;
 
 public class ConsumerApplication {
@@ -46,7 +47,7 @@ public class ConsumerApplication {
      * ->然后创建Proxy{@linkplain ReferenceConfig#createProxy}
      * ->spring将获取到的代理对象注入完成
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ConsumerConfiguration.class);
         context.start();
         //下面直接从容器中获取发现获取不到接口的类，说明产生的代理类并没有放在spring容器中
@@ -56,6 +57,7 @@ public class ConsumerApplication {
         DemoService service = context.getBean("demoServiceComponent", DemoServiceComponent.class);
         String hello = service.sayHello("world");
         System.out.println("result :" + hello);
+        System.in.read();
     }
 
     @Configuration
