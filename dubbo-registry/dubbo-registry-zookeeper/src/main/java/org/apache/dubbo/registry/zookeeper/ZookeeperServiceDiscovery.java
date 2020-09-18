@@ -165,6 +165,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery, EventListene
         CuratorWatcher watcher = watcherCaches.computeIfAbsent(path, key ->
                 new ZookeeperServiceDiscoveryChangeWatcher(this, serviceName));
         try {
+            //创建一个watcher，专门监听path节点
             curatorFramework.getChildren().usingWatcher(watcher).forPath(path);
         } catch (KeeperException.NoNodeException e) {
             // ignored

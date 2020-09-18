@@ -199,6 +199,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
     /**
      * 初始化dubbo的consumer
+     *
      * @return
      */
     public synchronized T get() {
