@@ -325,9 +325,16 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         dispatch(new ReferenceConfigInitializedEvent(this, invoker));
     }
 
+    /**
+     * dubbo创建代理对象
+     * @param map 在此之前组装好的相关参数
+     * @return
+     */
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
+        //这里判断出是否是本地引用
         if (shouldJvmRefer(map)) {
+            //是本地引用，开始构造本地引用URL
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
             invoker = REF_PROTOCOL.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
@@ -335,6 +342,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             }
         } else {
             urls.clear();
+            //如果用户指定了url，说明用户想直连引用
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
                 String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
                 if (us != null && us.length > 0) {
@@ -486,6 +494,14 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
     /**
      * Figure out should refer the service in the same JVM from configurations. The default behavior is true
+     *
+     * 判断是否应该引用同一个jvm的服务，默认是true
+     *
+     * 1、如果指定了jvm，那么返回true
+     * 2、如果指定了url，那么假设认为是远程调用
+     * 3、否则，需要检测scope参数来确定是否是jvm引用
+     * 4、如果scope参数未指定，并且且目标服务在同一个jvm提供，那么就做本地调用（也就是本地引用），这是默认的
+     *
      * 1. if injvm is specified, then use it
      * 2. then if a url is specified, then assume it's a remote call
      * 3. otherwise, check scope parameter
@@ -495,12 +511,14 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     protected boolean shouldJvmRefer(Map<String, String> map) {
         URL tmpUrl = new URL("temp", "localhost", 0, map);
         boolean isJvmRefer;
+        // url 配置被指定，则不做本地引用
         if (isInjvm() == null) {
             // if a url is specified, don't do local reference
             if (url != null && url.length() > 0) {
                 isJvmRefer = false;
             } else {
-                // by default, reference local service if there is
+                // 根据 url 的协议、scope 以及 injvm 等参数检测是否需要本地引用
+                // 比如如果用户显式配置了 scope=local，此时 isInjvmRefer 返回 true
                 isJvmRefer = InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl);
             }
         } else {
