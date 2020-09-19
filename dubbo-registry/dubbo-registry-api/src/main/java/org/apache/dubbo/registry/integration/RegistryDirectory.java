@@ -91,6 +91,22 @@ import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
 /**
  * RegistryDirectory
  */
+
+/**
+ * 注册文件目录
+ * 从{@linkplain org.apache.dubbo.registry.integration.RegistryProtocol#doRefer}
+ * 可以看到这个类记录了注册中心和消费者的信息，并且维护在dubbo服务所在的jvm中
+ *
+ *
+ * TODO-消费者维护RegistryDirectory的意义？
+ *
+ * 疑惑:服务的每个消费者维护了一个RegistryDirectory，为什么服务的提供者并没有维护
+ *     举例:当使用zookeeper注册中心的时候，提供者在注册之前并没有构造一个RegistryDirectory
+ *          而是直接使用zookeeper的curetor客户端直接在zookeeper上创建节点，然后消费者在注册之前会维护
+ *          一个RegistryDirectory，目前暂时没有搞明白维护一份RegistryDirectory的意义
+ *
+ * @param <T>
+ */
 public class RegistryDirectory<T> extends AbstractDirectory<T> implements NotifyListener {
 
     private static final Logger logger = LoggerFactory.getLogger(RegistryDirectory.class);
@@ -99,18 +115,21 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
 
     private static final RouterFactory ROUTER_FACTORY = ExtensionLoader.getExtensionLoader(RouterFactory.class)
             .getAdaptiveExtension();
-
+    //
     private final String serviceKey; // Initialization at construction time, assertion not null
-    private final Class<T> serviceType; // Initialization at construction time, assertion not null
+    //消费者对应的接口class，在构造方法中初始化，不能为空
+    private final Class<T> serviceType;
+    //url中的query参数，比较多，有是否初始化，类型，应用名称...
     private final Map<String, String> queryMap; // Initialization at construction time, assertion not null
     private final URL directoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
     private final boolean multiGroup;
     private Protocol protocol; // Initialization at the time of injection, the assertion is not null
     private Registry registry; // Initialization at the time of injection, the assertion is not null
     private volatile boolean forbidden = false;
+    //是否需要注册
     private boolean shouldRegister;
     private boolean shouldSimplified;
-
+    //覆盖的url
     private volatile URL overrideDirectoryUrl; // Initialization at construction time, assertion not null, and always assign non null value
 
     private volatile URL registeredConsumerUrl;
@@ -124,7 +143,9 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
     private volatile List<Configurator> configurators; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
     // Map<url, Invoker> cache service url to invoker mapping.
+    //服务提供者缓存
     private volatile Map<String, Invoker<T>> urlInvokerMap; // The initial value is null and the midway may be assigned to null, please use the local variable reference
+    //当有多个的提供者，会有多个invokers，会有负载均衡
     private volatile List<Invoker<T>> invokers;
 
     // Set<invokerUrls> cache invokeUrls to invokers mapping.
@@ -441,17 +462,21 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             }
             keys.add(key);
             // Cache key is url that does not merge with consumer side parameters, regardless of how the consumer combines parameters, if the server url changes, then refer again
+            //缓存提供者对应的invoker
             Map<String, Invoker<T>> localUrlInvokerMap = this.urlInvokerMap; // local reference
             Invoker<T> invoker = localUrlInvokerMap == null ? null : localUrlInvokerMap.get(key);
+            //缓存未命中，做一次refer
             if (invoker == null) { // Not in the cache, refer again
                 try {
                     boolean enabled = true;
+                    //
                     if (url.hasParameter(DISABLED_KEY)) {
                         enabled = !url.getParameter(DISABLED_KEY, false);
                     } else {
                         enabled = url.getParameter(ENABLED_KEY, true);
                     }
                     if (enabled) {
+                        //dubbo本地的真正invoker实例在这里生成，利用DUBBO spi，根据不同的protocol返回不同的invoker
                         invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {

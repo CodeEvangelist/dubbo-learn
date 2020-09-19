@@ -159,8 +159,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * The url of the reference service
+     * 引用服务的url，当有多个注册中心时会出现多个url
      */
-    protected final List<URL> urls = new ArrayList<URL>();
+    protected final List<URL> urls = new ArrayList<>();
 
     public List<URL> getExportedUrls() {
         return urls;

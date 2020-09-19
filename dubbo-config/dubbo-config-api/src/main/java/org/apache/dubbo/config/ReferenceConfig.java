@@ -49,6 +49,7 @@ import org.apache.dubbo.rpc.model.AsyncMethodInfo;
 import org.apache.dubbo.rpc.model.ConsumerModel;
 import org.apache.dubbo.rpc.model.ServiceDescriptor;
 import org.apache.dubbo.rpc.model.ServiceRepository;
+import org.apache.dubbo.rpc.protocol.AbstractProtocol;
 import org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.apache.dubbo.rpc.support.ProtocolUtils;
@@ -327,7 +328,18 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     }
 
     /**
-     * dubbo创建代理对象
+     * dubbo创建代理对象和创建invoker过程
+     * 1、判断是否是本地引用，如果是本地jvm引用，那么主体过程就是如下，中间还有装饰者模式的aop，这是dubbo-spi常用的，就不深究
+     *    =>{@linkplain Protocol#refer}
+     *    =>{@linkplain AbstractProtocol#protocolBindingRefer}
+     *    =>{@linkplain InjvmProtocol#protocolBindingRefer}
+     *
+     * 2、然后是判断是否直连调用，是否直连都是通过配置中有没有主观指定url，例如<dubbo:reference interface="xxx" url="dubbo://192.168.1.1/sxx/xx"/>
+     *    这里只分析指定了url的情况，主体过程如下，同样装饰者模式不做说明
+     *    =>
+     *
+     *
+     *
      * @param map 在此之前组装好的相关参数
      * @return
      */
@@ -335,8 +347,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     private T createProxy(Map<String, String> map) {
         //这里判断出是否是本地引用
         if (shouldJvmRefer(map)) {
-            //是本地引用，开始构造本地引用URL
+            //是本地引用，开始构造本地引用URL，协议是injvm
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
+            //所以这里最终调用的是InjvmProtocol,但由于InjvmProtocol没有重写refer方法，所以由其父类AbstractProtocol中转了一次
             invoker = REF_PROTOCOL.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
@@ -359,7 +372,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                         }
                     }
                 }
-            } else { // assemble URL from register center's configuration
+            } else {
+                //如果没有指定url，那么认为是想从注册中心上面获取提供者，即获取相关的注册中心地址
+                // assemble URL from register center's configuration
                 // if protocols not injvm checkRegistry
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     checkRegistry();
@@ -378,11 +393,12 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     }
                 }
             }
-
+            //如果是单个注册中心
             if (urls.size() == 1) {
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
-                List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
+            //如果是注册中心集群
+                List<Invoker<?>> invokers = new ArrayList<>();
                 URL registryURL = null;
                 for (URL url : urls) {
                     invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
