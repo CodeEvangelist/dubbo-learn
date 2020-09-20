@@ -37,6 +37,9 @@ import org.apache.dubbo.config.utils.ConfigValidationUtils;
 import org.apache.dubbo.event.Event;
 import org.apache.dubbo.event.EventDispatcher;
 import org.apache.dubbo.metadata.WritableMetadataService;
+import org.apache.dubbo.registry.Registry;
+import org.apache.dubbo.registry.integration.RegistryDirectory;
+import org.apache.dubbo.registry.integration.RegistryProtocol;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Protocol;
 import org.apache.dubbo.rpc.ProxyFactory;
@@ -336,9 +339,17 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
      *
      * 2、然后是判断是否直连调用，是否直连都是通过配置中有没有主观指定url，例如<dubbo:reference interface="xxx" url="dubbo://192.168.1.1/sxx/xx"/>
      *    这里只分析指定了url的情况，主体过程如下，同样装饰者模式不做说明
-     *    =>
+     *    =>{@linkplain Protocol#refer}
+     *    =>{@linkplain AbstractProtocol#protocolBindingRefer}
+     *    =>{@linkplain org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol#protocolBindingRefer}
      *
+     * 3、如果是注册中心，大体和直连类似，多了一个获取提供者的过程，同样装饰者模式不做说明
+     *    =>{@linkplain Protocol#refer}
+     *    =>{@linkplain RegistryProtocol#refer}
+     *    =>{@linkplain RegistryProtocol#doRefer}
+     *    =>{@linkplain RegistryDirectory#subscribe} 这一步是获取服务提供者，然后就是类似直连，为提供者生成invoker
      *
+     * 4、如果是多个直连或者多个注册中心，合并多个invoker
      *
      * @param map 在此之前组装好的相关参数
      * @return
@@ -356,7 +367,8 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             }
         } else {
             urls.clear();
-            //如果用户指定了url，说明用户想直连引用
+            //如果用户指定了url，说明用户想直连引用,而且这里url可能有多个
+            //举例<dubbo:reference interface="xxx" url="dubbo://192.168.1.1/sxx/xx;dubbo://192.168.1.2/sxx/xx"/>
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
                 String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
                 if (us != null && us.length > 0) {
@@ -373,7 +385,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     }
                 }
             } else {
-                //如果没有指定url，那么认为是想从注册中心上面获取提供者，即获取相关的注册中心地址
+                //如果没有指定url，那么认为是想从注册中心上面获取提供者，即获取相关的注册中心地址,同样注册中心也可能有多个
                 // assemble URL from register center's configuration
                 // if protocols not injvm checkRegistry
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
@@ -393,25 +405,33 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     }
                 }
             }
-            //如果是单个注册中心
+            //这里比较有意思，从这里判断url的个数来看，是并没有区分注册中心和直连的
+            //说明从注册中心和直连生成的invoker并没有太大的区别，都是用来调用服务的
+
+            //TODO 是否可以认为注册中心其实也是先从注册中心获取到provider地址，然后类似直连生成invoker？
             if (urls.size() == 1) {
+                //
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
-            //如果是注册中心集群
+            //如果多个url调用，这种最起码说明有多个提供者供调用，不管是提供直连调用，还是注册中心
                 List<Invoker<?>> invokers = new ArrayList<>();
                 URL registryURL = null;
                 for (URL url : urls) {
+                    //生成invoker的时候并没有区分注册中心和直连
                     invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
+                    //这里有区分注册中心
                     if (UrlUtils.isRegistry(url)) {
                         registryURL = url; // use last registry url
                     }
                 }
+                //如果有注册中心，那么说明是多个注册中心
                 if (registryURL != null) { // registry url is available
                     // for multi-subscription scenario, use 'zone-aware' policy by default
                     String cluster = registryURL.getParameter(CLUSTER_KEY, ZoneAwareCluster.NAME);
                     // The invoker wrap sequence would be: ZoneAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, routing happens here) -> Invoker
                     invoker = Cluster.getCluster(cluster, false).join(new StaticDirectory(registryURL, invokers));
-                } else { // not a registry url, must be direct invoke.
+                } else {
+                //如果没有注册中心，那么说明有多个提供者供直连调用
                     String cluster = CollectionUtils.isNotEmpty(invokers)
                             ? (invokers.get(0).getUrl() != null ? invokers.get(0).getUrl().getParameter(CLUSTER_KEY, ZoneAwareCluster.NAME) : Cluster.DEFAULT)
                             : Cluster.DEFAULT;

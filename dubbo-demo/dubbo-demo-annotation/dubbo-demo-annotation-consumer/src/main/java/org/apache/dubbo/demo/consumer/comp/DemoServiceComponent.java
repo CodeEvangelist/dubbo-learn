@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component("demoServiceComponent")
 public class DemoServiceComponent implements DemoService {
-    @DubboReference
+    @DubboReference/*(url = "dubbo://127.0.0.1:20880")*/
     private DemoService demoService;
 
     @Override
