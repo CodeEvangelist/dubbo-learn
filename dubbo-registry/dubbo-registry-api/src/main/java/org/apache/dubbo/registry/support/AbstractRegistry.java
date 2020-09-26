@@ -392,6 +392,18 @@ public abstract class AbstractRegistry implements Registry {
 
     /**
      * 提供者有所改变，通知到这里
+     * 这里的notify会有主动和回调的概念
+     * 1、主动notify是在subscribe之后，一般是实时刷新提供者和消费者等等的信息
+     * 2、回调是指在采用不同的注册中心时，当有提供者和消费者离线等事件发生时，注册中心感知了这些变化，回调此notify
+     * 下面以zookeeper回调来举例：
+     * 场景:注册中心中有一个provider宕机，zookeeper的watcher感知了节点变化，notify过程如下
+     * ->{@linkplain org.apache.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.CuratorWatcherImpl#process}
+     * ->{@linkplain org.apache.dubbo.registry.zookeeper.ZookeeperRegistry#doSubscribe(org.apache.dubbo.common.URL, org.apache.dubbo.registry.NotifyListener)}
+     *    这一步比较特别，其实只是用到了这一步中设置的回调方法，也就是ChildListener中的lambda表达式中
+     *    {@linkplain org.apache.dubbo.remoting.zookeeper.ChildListener#childChanged(java.lang.String, java.util.List)}
+     * ->{@linkplain FailbackRegistry#notify(URL url, NotifyListener listener, List<URL> urls)}
+     * ->{@linkplain FailbackRegistry#doNotify(URL, NotifyListener, List)}
+     * ->{@linkplain FailbackRegistry#doNotify(URL, NotifyListener, List)}
      *
      * @param url      consumer side url
      * @param listener listener
@@ -429,6 +441,7 @@ public abstract class AbstractRegistry implements Registry {
             String category = entry.getKey();
             List<URL> categoryList = entry.getValue();
             categoryNotified.put(category, categoryList);
+            //最终各监听者回调，一般是会刷新dubbo中的一些provider，consumer等等，然后组装成对应的invoker对象
             listener.notify(categoryList);
             // We will update our cache file after each notification.
             // When our Registry has a subscribe failure due to network jitter, we can return at least the existing cache URL.

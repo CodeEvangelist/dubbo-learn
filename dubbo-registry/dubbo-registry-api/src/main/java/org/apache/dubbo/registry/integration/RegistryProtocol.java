@@ -28,10 +28,7 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.NamedThreadFactory;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.common.utils.UrlUtils;
-import org.apache.dubbo.registry.NotifyListener;
-import org.apache.dubbo.registry.Registry;
-import org.apache.dubbo.registry.RegistryFactory;
-import org.apache.dubbo.registry.RegistryService;
+import org.apache.dubbo.registry.*;
 import org.apache.dubbo.registry.retry.ReExportTask;
 import org.apache.dubbo.registry.support.SkipFailbackWrapperException;
 import org.apache.dubbo.rpc.Exporter;
@@ -525,6 +522,13 @@ public class RegistryProtocol implements Protocol {
             registry.register(directory.getRegisteredConsumerUrl());
         }
         directory.buildRouterChain(subscribeUrl);
+        /**
+         * 说明一下subscribe的过程
+         * -> {@linkplain org.apache.dubbo.registry.integration.RegistryDirectory#subscribe}
+         * -> {@linkplain ListenerRegistryWrapper#subscribe}
+         * -> {@linkplain org.apache.dubbo.registry.support.FailbackRegistry#subscribe}
+         * -> {@linkplain org.apache.dubbo.registry.zookeeper.ZookeeperRegistry#doSubscribe}
+         */
         directory.subscribe(toSubscribeUrl(subscribeUrl));
 
         Invoker<T> invoker = cluster.join(directory);

@@ -203,6 +203,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         setConsumerUrl(url);
         CONSUMER_CONFIGURATION_LISTENER.addNotifyListener(this);
         serviceConfigurationListener = new ReferenceConfigurationListener(this, url);
+        //这里registry是一个装饰着者(org.apache.dubbo.registry.ListenerRegistryWrapper)
         registry.subscribe(url, this);
     }
 

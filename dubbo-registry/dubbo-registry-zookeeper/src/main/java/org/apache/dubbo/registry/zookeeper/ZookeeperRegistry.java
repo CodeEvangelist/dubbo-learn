@@ -194,6 +194,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
                     }
                 }
+                //每一次订阅马上就会有一次notify，这样保证各消费者，生产者数据为最新
                 notify(url, listener, urls);
             }
         } catch (Throwable e) {
