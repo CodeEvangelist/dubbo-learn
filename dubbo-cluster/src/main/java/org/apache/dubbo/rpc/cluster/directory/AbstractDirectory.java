@@ -65,6 +65,13 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
         setRouterChain(routerChain);
     }
 
+    /**
+     * 这里是服务调用获取所有的invoker对象，在这个过程首先有一些路由规则等等，其实在这之前已经notify过了，
+     * 所以invoker都有刷新，这里只是根据一些路由等等再次处理invoker，然后返回一个invoker集合
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public List<Invoker<T>> list(Invocation invocation) throws RpcException {
         if (destroyed) {
@@ -109,6 +116,12 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
         destroyed = true;
     }
 
+    /**
+     * 这个是由子类去实现
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     protected abstract List<Invoker<T>> doList(Invocation invocation) throws RpcException;
 
 }

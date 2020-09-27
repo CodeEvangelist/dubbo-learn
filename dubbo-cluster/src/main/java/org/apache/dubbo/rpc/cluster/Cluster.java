@@ -50,6 +50,12 @@ public interface Cluster {
         return getCluster(name, true);
     }
 
+    /**
+     * 默认选择调用失败自动切换容错机制实现
+     * @param name
+     * @param wrap
+     * @return
+     */
     static Cluster getCluster(String name, boolean wrap) {
         if (StringUtils.isEmpty(name)) {
             name = Cluster.DEFAULT;

@@ -426,7 +426,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 }
                 //如果有注册中心，那么说明是多个注册中心
                 if (registryURL != null) { // registry url is available
-                    // for multi-subscription scenario, use 'zone-aware' policy by default
+                    //这里是说明如果有多个注册中心，那么集群容错策略默认选用'zone-aware'，也可以主动配置容错策略
                     String cluster = registryURL.getParameter(CLUSTER_KEY, ZoneAwareCluster.NAME);
                     // The invoker wrap sequence would be: ZoneAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, routing happens here) -> Invoker
                     invoker = Cluster.getCluster(cluster, false).join(new StaticDirectory(registryURL, invokers));

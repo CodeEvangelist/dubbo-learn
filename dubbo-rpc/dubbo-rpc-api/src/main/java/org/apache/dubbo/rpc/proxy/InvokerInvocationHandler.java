@@ -45,6 +45,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        //这个if是判断方法是否需要代理
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }

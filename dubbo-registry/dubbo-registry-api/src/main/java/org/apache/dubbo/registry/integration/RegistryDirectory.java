@@ -105,6 +105,12 @@ import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
  *          而是直接使用zookeeper的curetor客户端直接在zookeeper上创建节点，然后消费者在注册之前会维护
  *          一个RegistryDirectory，目前暂时没有搞明白维护一份RegistryDirectory的意义
  *
+ *维护RegistryDirectory的意义：
+ *     随着对服务更新的了解，这个类其实是对服务提供者的缓存，例如urlInvokerMap属性，
+ *     其实是一个methodname->invoker的映射，也就是说调用方法之前会先看本地，本地有会比较快的
+ *     发起请求，不用去注册中心获取提供者信息，当然由此维护一个RegistryDirectory的成本比较大，
+ *     包括注册中心事件的同步等等，很多数据都需要同步，所以有notify通知，在notify通知中
+ *     需要将url转化为invoker对象，同时还需要初始化好对应的路由链等等，销毁旧的invoker
  * @param <T>
  */
 public class RegistryDirectory<T> extends AbstractDirectory<T> implements NotifyListener {

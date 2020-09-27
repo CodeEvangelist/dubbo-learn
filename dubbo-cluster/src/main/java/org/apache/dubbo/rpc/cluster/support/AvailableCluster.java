@@ -25,6 +25,10 @@ import org.apache.dubbo.rpc.cluster.Directory;
  * AvailableCluster
  *
  */
+
+/**
+ * 暂时未发现使用的地方，除非用户主动配置这个策略，否则用不到
+ */
 public class AvailableCluster implements Cluster {
 
     public static final String NAME = "available";

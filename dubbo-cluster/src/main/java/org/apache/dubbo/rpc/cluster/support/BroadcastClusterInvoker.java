@@ -32,6 +32,11 @@ import java.util.List;
  * BroadcastClusterInvoker
  *
  */
+
+/**
+ * 广播调用容错策略机制实现-该类通常用于通知所有提供者更新缓存或日志等本地资源信息
+ * @param <T>
+ */
 public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(BroadcastClusterInvoker.class);

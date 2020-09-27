@@ -244,6 +244,12 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         return null;
     }
 
+    /**
+     * 这里就是服务调用最后的过程
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
         checkWhetherDestroyed();
@@ -255,8 +261,11 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         }
 
         List<Invoker<T>> invokers = list(invocation);
+        //根据配置初始化负载均衡策越
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+        //根据负载均衡器和invoker调用，这里就是dubbo实现容错机制的时机
+        //不同的子类实现的容错机制不一样
         return doInvoke(invocation, invokers, loadbalance);
     }
 
@@ -288,6 +297,12 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     protected abstract Result doInvoke(Invocation invocation, List<Invoker<T>> invokers,
                                        LoadBalance loadbalance) throws RpcException;
 
+    /**
+     * 如果有负载均衡就在这里
+     * @param invocation
+     * @return
+     * @throws RpcException
+     */
     protected List<Invoker<T>> list(Invocation invocation) throws RpcException {
         return directory.list(invocation);
     }

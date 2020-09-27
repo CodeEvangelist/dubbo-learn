@@ -492,6 +492,7 @@ public class RegistryProtocol implements Protocol {
         Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
         String group = qs.get(GROUP_KEY);
         if (group != null && group.length() > 0) {
+            //如果单个注册中心有多个服务提供者，那么使用MergeableCluster来作为容错机制
             if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
                 return doRefer(Cluster.getCluster(MergeableCluster.NAME), registry, type, url);
             }

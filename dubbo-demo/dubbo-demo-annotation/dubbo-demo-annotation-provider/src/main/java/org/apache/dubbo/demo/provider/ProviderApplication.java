@@ -59,7 +59,7 @@ public class ProviderApplication {
         @Bean
         public RegistryConfig registryConfig() {
             RegistryConfig registryConfig = new RegistryConfig();
-            registryConfig.setAddress("zookeeper://192.168.1.107:2181");
+            registryConfig.setAddress("zookeeper://192.168.0.104:2181");
             //有时候zookeeper网络不是特别好，会导致zookeeper not connected，所以这里添加了zookeeper的timeout
             registryConfig.setTimeout(10000);
             return registryConfig;
